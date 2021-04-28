@@ -41,7 +41,7 @@ Vagrant.configure("2") do |config|
       fi
     SHELL
   end
-  config.vm.provision (IS_WINDOWS)?"ansible-local":"ansible" do |ansible|
+  config.vm.provision (IS_WINDOWS)?"ansible_local":"ansible" do |ansible|
     ansible.groups = {
       "kubernetes" => ["k8s-*"],
       "docker_swarm" => ["docker-swarm-*"],

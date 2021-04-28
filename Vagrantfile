@@ -1,6 +1,8 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+IS_WINDOWS = /mingw32/ =~ RUBY_PLATFORM
+
 Vagrant.configure("2") do |config|
   # https://docs.vagrantup.com.
   config.vm.box = "ubuntu/focal64"
@@ -24,7 +26,22 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  config.vm.provision "ansible" do |ansible|
+  if IS_WINDOWS
+    config.vm.provision "shell", inline: <<-SHELL
+      #!/usr/bin/env bash
+      REQUIREMENTS_YML='/vagrant/requirements.yml'
+      apt-get update
+      apt-get -y install \
+        python3 \
+        python3-pip
+      python3 -m pip install ansible
+      if [ -f $REQUIREMENTS_YML ]; then
+        su - vagrant -c "ansible-galaxy collection install -r $REQUIREMENTS_YML"
+        su - vagrant -c "ansible-galaxy role install -r $REQUIREMENTS_YML"
+      fi
+    SHELL
+  end
+  config.vm.provision (IS_WINDOWS)?"ansible-local":"ansible" do |ansible|
     ansible.groups = {
       "kubernetes" => ["k8s-*"],
       "docker_swarm" => ["docker-swarm-*"],

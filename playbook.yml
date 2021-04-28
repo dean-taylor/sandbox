@@ -1,0 +1,14 @@
+---
+- hosts: all
+  become: yes
+  roles:
+    - role: systemd
+      vars:
+        systemd_mDNS:
+          - interface: enp0s8
+            state: true
+#- hosts: docker-swarm-*
+#  roles:
+#    - role: dockerSwarm
+#      tags: []
+#      vars: {}

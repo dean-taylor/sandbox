@@ -1,0 +1,3 @@
+[submodule "role/systemd"]
+	path = role/systemd
+	url = git@github.com:dean-taylor/ansible-role-systemd.git

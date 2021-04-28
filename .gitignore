@@ -1,3 +1,4 @@
 .*.swp
 /roles/*
 !/roles/.gitignore
+/.vagrant/

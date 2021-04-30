@@ -1,2 +1,5 @@
 .*.swp
 /.vagrant/
+Vagrantfile~
+*.log
+/Vagrantfile-*

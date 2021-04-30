@@ -2,11 +2,31 @@
 - hosts: all
   become: yes
   roles:
+    - common
     - role: systemd
       vars:
         systemd_mDNS:
           - interface: enp0s8
             state: true
+  tasks:
+    - name: groups
+      ansible.builtin.debug:
+        msg: "{{ groups['microk8s'] | first }}"
+
+- hosts: k8s-0
+  become: yes
+  roles:
+    - ansible
+    - k8s-admin
+
+- hosts: microk8s
+  become: yes
+  roles:
+    - role: microk8s
+      vars:
+        microk8s_group_members:
+          - vagrant
+
 #- hosts: docker-swarm-*
 #  roles:
 #    - role: dockerSwarm

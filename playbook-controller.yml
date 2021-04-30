@@ -1,0 +1,6 @@
+---
+- hosts: k8s-0
+  tasks:
+    - name: groups
+      ansible.builtin.debug:
+        msg: "{{ groups['microk8s'] | first }}"

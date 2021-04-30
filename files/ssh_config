@@ -1,0 +1,6 @@
+Host *
+  User vagrant
+  UserKnownHostsFile /dev/null
+  StrictHostKeyChecking no
+  PasswordAuthentication no
+  LogLevel FATAL

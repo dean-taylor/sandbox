@@ -1,4 +1,4 @@
 eval `ssh-agent -s` >/dev/null
 for f in /vagrant/.vagrant/machines/*/virtualbox/private_key; do
-  cat "${f}" |ssh-add -k - >/dev/null
+  cat "${f}" |ssh-add -k - &>/dev/null
 done

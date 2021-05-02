@@ -1,8 +1,9 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+ANSIBLE_EXTRA_VARS = {}
 ANSIBLE_GROUPS = {
-  "kubernetes"   => ["k8s-0","k8s-1","k8s-2"],
+  "kubernetes"   => ['k8s-\*'],
   "microk8s"     => ["k8s-0","k8s-1","k8s-2"],
   "docker_swarm" => ["docker-swarm-0","docker-swarm-1","docker-swarm-2"],
   "docker_swarm_manager" => ["docker-swarm-0"],
@@ -35,23 +36,32 @@ Vagrant.configure("2") do |config|
       if IS_WINDOWS && n==0
         conf.vm.provision "file", source: "files/ssh_config", destination: "/home/vagrant/.ssh/config"
         conf.vm.provision "file", source: "files/bash_aliases", destination: "/home/vagrant/.bash_aliases"
+        conf.vm.provision "file", source: "files/ansible.cfg", destination: "/home/vagrant/.ansible.cfg"
         conf.vm.provision "shell", inline: <<-SHELL
           #!/usr/bin/env bash
-          set -x
           REQUIREMENTS_YML='/vagrant/requirements.yml'
-          apt-get update
-          apt-get -y install python3 python3-pip
-          python3 -m pip install ansible
-          if [ -f $REQUIREMENTS_YML ]; then
-            su - vagrant -c "ansible-galaxy collection install -r $REQUIREMENTS_YML"
-            su - vagrant -c "ansible-galaxy role install -r $REQUIREMENTS_YML"
+          set -x
+          if ! which ansible >/dev/null; then
+            apt-get update
+            apt-get -y install python3 python3-pip
+            python3 -m pip install ansible
+            if [ -f $REQUIREMENTS_YML ]; then
+              su - vagrant -c "ansible-galaxy collection install -r $REQUIREMENTS_YML"
+              su - vagrant -c "ansible-galaxy role install -r $REQUIREMENTS_YML"
+            fi
           fi
         SHELL
 
         conf.vm.provision "ansible_local" do |ansible|
+          ansible.extra_vars = ANSIBLE_EXTRA_VARS
           ansible.groups = ANSIBLE_GROUPS
           ansible.host_vars = ANSIBLE_HOST_VARS
-          ansible.playbook = "playbook-controller.yml"
+
+          ansible.compatibility_mode = "2.0"
+          #ansible.config_file = ""
+          ansible.inventory_path = "/home/vagrant/.ansible/inventory"
+          ansible.limit = "all"
+          ansible.playbook = "playbook.yml"
           ansible.provisioning_path = "/vagrant"
           ansible.tmp_path = "/tmp/vagrant-ansible"
 
@@ -68,6 +78,7 @@ Vagrant.configure("2") do |config|
     #!/usr/bin/env bash
     set -x
     # Enable mDNS on the private_network
+    # Enable mDNS globally
     if ! [ -f /etc/systemd/resolved.conf.d/mDNS.conf ]; then
       [ -d /etc/systemd/resolved.conf.d ] || mkdir -p /etc/systemd/resolved.conf.d
       cat <<'EOT' >/etc/systemd/resolved.conf.d/mDNS.conf
@@ -76,6 +87,7 @@ MulticastDNS=true
 EOT
       systemctl restart systemd-resolved.service
     fi
+    # Enable mDNS on the private_network interface
     if ! [ -f /etc/systemd/network/10-netplan-enp0s8.network.d/mDNS.conf ]; then
       [ -d /etc/systemd/network/10-netplan-enp0s8.network.d ] || mkdir -p /etc/systemd/network/10-netplan-enp0s8.network.d
       cat <<'EOT' >/etc/systemd/network/10-netplan-enp0s8.network.d/mDNS.conf
@@ -84,7 +96,7 @@ MulticastDNS=true
 EOT
       systemctl restart systemd-networkd.service
     fi
-    # Add local to Domain search path
+    # Add the mDNS .local to Domain search path
     if ! [ -f /etc/netplan/55-vagrant-SHELL.yaml ]; then
       cat <<'EOT' >/etc/netplan/55-vagrant-SHELL.yaml
 ---
@@ -100,10 +112,39 @@ EOT
   SHELL
 
   if not IS_WINDOWS
+    # https://www.vagrantup.com/docs/provisioning/ansible_intro
+    # https://www.vagrantup.com/docs/provisioning/ansible_common
+    # https://www.vagrantup.com/docs/provisioning/ansible
     config.vm.provision "ansible" do |ansible|
+      ansible.extra_vars = ANSIBLE_EXTRA_VARS
       ansible.groups = ANSIBLE_GROUPS
       ansible.host_vars = ANSIBLE_HOST_VARS
       ansible.playbook = "playbook.yml"
+
+      #ansible.ask_sudo_pass = false
+      #ansible.ask_vault_pass = false
+      #ansible.force_remote_user = true
+      #ansible.host_key_checking = false
+      #ansible.raw_ssh_args = []
+      #ansible.become = false
+      #ansible.become_user = "root"
+      #ansible.compatibility_mode = "auto"	# "auto", "1.8", "2.0"
+      #ansible.config_file = ""
+      #ansible.inventory_path = ""	# Static inventory
+      #ansible.limit = "all"
+      #ansible.playbook_command = "ansible-playbook"
+      #ansible.raw_arguments = ['--check','-M','/my/modules']
+      #ansible.raw_arguments = ['--connection=paramiko','--forks=10']
+      #ansible.skip_tags = []
+      #ansible.start_at_task = ''
+      #ansible.tags = []
+      #ansible.vault_password_file = ''
+      #ansible.verbose = false
+      #ansible.version = "2.1.6.0"
+
+      ansible.galaxy_command = "ansible-galaxy collection install -r %{role_file} && ansible-galaxy role install -r %{role_file}"	# --roles-path=%{roles_path} --force
+      ansible.galaxy_role_file = "requirements.yml"
+      ansible.galaxy_roles_path = nil
     end
   end
 end

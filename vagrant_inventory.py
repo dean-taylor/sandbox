@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 import configparser
+import filecmp
+import glob
 import json
+import os
+import shutil
 import sys, getopt
 
 def main(argv):
@@ -33,6 +37,8 @@ def main(argv):
         "ungrouped": {"children": []},
     }
 
+    private_keys = list(glob.glob("/vagrant/.vagrant/machines/*/virtualbox/private_key"))
+
     for group in config.sections():
         if group != "all":
             inventory[group] = { "hosts": [] }
@@ -42,9 +48,21 @@ def main(argv):
             inventory[group]["hosts"].append(host)
             if host not in inventory["_meta"]["hostvars"]:
                 inventory["_meta"]["hostvars"][host] = {}
+                private_key_src = "/vagrant/.vagrant/machines/{}/virtualbox/private_key".format(host)
+                if private_key_src in private_keys:
+                    private_key = "{}/{}".format(os.path.expanduser("~"), os.path.relpath(private_key_src, "/vagrant"))
+                    if not os.path.exists(private_key) or not filecmp.cmp(private_key_src, private_key):
+                        dir = os.path.dirname(private_key)
+                        if not os.path.exists(dir):
+                            os.makedirs(dir)
+                        shutil.copy(private_key_src, private_key)
+                        os.chmod(private_key, 0o600)
+                    inventory["_meta"]["hostvars"][host]["ansible_ssh_private_key_file"] = private_key
             inventory["_meta"]["hostvars"][host]["ansible_user"] = "vagrant"
             if vars:
-                inventory["_meta"]["hostvars"][host]["ansible_connection"] = "local"
+                for var in vars.split(" "):
+                    k,v = var.split("=")
+                    inventory["_meta"]["hostvars"][host][k] = v
 
     if _host:
         try:

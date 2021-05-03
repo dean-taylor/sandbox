@@ -50,6 +50,8 @@ Vagrant.configure("2") do |config|
               su - vagrant -c "ansible-galaxy role install -r $REQUIREMENTS_YML"
             fi
           fi
+          # THE BELLS!!!
+          grep -q 'set bell-style none' /etc/inputrc || sed -i 's/#\s*set bell-style none/set bell-style none/' /etc/inputrc
         SHELL
 
         conf.vm.provision "ansible_local" do |ansible|

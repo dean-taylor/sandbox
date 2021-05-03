@@ -1,0 +1,6 @@
+Host{% for host in groups['all'] %} {{ host }}{% endfor %}
+  User vagrant
+  UserKnownHostsFile /dev/null
+  StrictHostKeyChecking no
+  PasswordAuthentication no
+  LogLevel FATAL

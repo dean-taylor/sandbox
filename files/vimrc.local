@@ -2,3 +2,4 @@ set background=dark
 colorscheme industry
 autocmd FileType json,xml,yaml,yml setlocal ts=2 sts=2 sw=2 expandtab
 autocmd FileType markdown setlocal spell
+set visualbell

@@ -22,16 +22,22 @@
 - hosts: k8s-0
   become: yes
   roles:
-    - ansible
-    - k8s-admin
+    - role: ansible
+      tags: ["ansible"]
+    - role: globus-personal
+      tags: ["globus-personal"]
+    - role: k8s-admin
+      tags: ["k8s-admin"]
 
 - hosts: microk8s
   become: yes
   roles:
     - role: microk8s
+      tags: ["microk8s"]
       vars:
         microk8s_group_members:
           - vagrant
+        microk8s_ipv4address: "{{ ansible_enp0s8.ipv4.address }}"
 
 #- hosts: docker-swarm-*
 #  roles:

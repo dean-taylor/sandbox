@@ -34,7 +34,7 @@ Vagrant.configure("2") do |config|
     config.vm.define "k8s-#{n}", autostart: n==0?true:false, primary: n==0?true:false do |conf|
       conf.vm.hostname = "k8s-#{n}"
       if IS_WINDOWS && n==0
-        conf.vm.provision "file", source: "files/ssh_config", destination: "/home/vagrant/.ssh/config"
+        #conf.vm.provision "file", source: "files/ssh_config", destination: "/home/vagrant/.ssh/config"
         conf.vm.provision "file", source: "files/bash_aliases", destination: "/home/vagrant/.bash_aliases"
         conf.vm.provision "file", source: "files/ansible.cfg", destination: "/home/vagrant/.ansible.cfg"
         conf.vm.provision "shell", inline: <<-SHELL

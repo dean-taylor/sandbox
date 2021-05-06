@@ -1,4 +1,6 @@
-eval `ssh-agent -s` >/dev/null
+#[ -z $SSH_AGENT_PID ] || /usr/bin/ssh-agent -s -k >/dev/null
+[ -z $SSH_AGENT_PID ] && eval `/usr/bin/ssh-agent -s` >/dev/null
+
 for f in /vagrant/.vagrant/machines/*/virtualbox/private_key; do
-  cat "${f}" |ssh-add -k - &>/dev/null
+  cat "${f}" |/usr/bin/ssh-add -k - &>/dev/null
 done

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+SSH='/usr/bin/ssh'
+
+for f in /vagrant/.vagrant/machines/*/virtualbox/private_key; do
+  echo $f
+done
+
+#exec $SSH "$@"

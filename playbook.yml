@@ -8,17 +8,7 @@
         systemd_mDNS:
           - interface: enp0s8
             state: true
-  tasks:
-    - name: ssh config for vagrant hosts
-      become: true
-      ansible.builtin.template:
-        dest: /etc/ssh/ssh_config.d/vagrant.conf
-        group: root
-        mode: 0644
-        owner: root
-        src: "templates/ssh/ssh_config.j2"
-        trim_blocks: false
-        
+
 - hosts: k8s-0
   become: yes
   roles:

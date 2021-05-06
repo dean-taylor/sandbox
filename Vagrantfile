@@ -3,7 +3,6 @@
 
 ANSIBLE_EXTRA_VARS = {}
 ANSIBLE_GROUPS = {
-  "kubernetes"   => ['k8s-\*'],
   "microk8s"     => ["k8s-0","k8s-1","k8s-2"],
   "docker_swarm" => ["docker-swarm-0","docker-swarm-1","docker-swarm-2"],
   "docker_swarm_manager" => ["docker-swarm-0"],
@@ -34,13 +33,18 @@ Vagrant.configure("2") do |config|
     config.vm.define "k8s-#{n}", autostart: n==0?true:false, primary: n==0?true:false do |conf|
       conf.vm.hostname = "k8s-#{n}"
       if IS_WINDOWS && n==0
-        #conf.vm.provision "file", source: "files/ssh_config", destination: "/home/vagrant/.ssh/config"
+        conf.vm.provision "file", source: "vagrant-ansible_local", destination: "/tmp/vagrant-ansible_local"
+        conf.vm.provision "file", source: "files/vagrant_inventory.py", destination: "/home/vagrant/.ansible/inventory/vagrant_inventory.py"
         conf.vm.provision "file", source: "files/bash_aliases", destination: "/home/vagrant/.bash_aliases"
         conf.vm.provision "file", source: "files/ansible.cfg", destination: "/home/vagrant/.ansible.cfg"
         conf.vm.provision "shell", inline: <<-SHELL
           #!/usr/bin/env bash
           REQUIREMENTS_YML='/vagrant/requirements.yml'
+          set -e
           set -x
+          /usr/bin/python3 /tmp/vagrant-ansible_local/vagrant-ansible-ssh_config_d.py >/etc/ssh/ssh_config.d/vagrant-ansible_local.conf
+          su - vagrant -c "/usr/bin/python3 /tmp/vagrant-ansible_local/vagrant-ansible-ssh_config.py"
+          [ -f /home/vagrant/.ansible/inventory/vagrant_inventory.py ] && chmod +x /home/vagrant/.ansible/inventory/vagrant_inventory.py
           if ! which ansible >/dev/null; then
             apt-get update
             apt-get -y install python3 python3-pip
@@ -50,8 +54,6 @@ Vagrant.configure("2") do |config|
               su - vagrant -c "ansible-galaxy role install -r $REQUIREMENTS_YML"
             fi
           fi
-          # THE BELLS!!!
-          grep -q 'set bell-style none' /etc/inputrc || sed -i 's/#\s*set bell-style none/set bell-style none/' /etc/inputrc
         SHELL
 
         conf.vm.provision "ansible_local" do |ansible|
@@ -60,8 +62,7 @@ Vagrant.configure("2") do |config|
           ansible.host_vars = ANSIBLE_HOST_VARS
 
           ansible.compatibility_mode = "2.0"
-          #ansible.config_file = ""
-          ansible.inventory_path = "/home/vagrant/.ansible/inventory"
+          #ansible.inventory_path = ""		# Do Not Use this option; ref. to vagrant_inventory.py
           ansible.limit = "all"
           ansible.playbook = "playbook.yml"
           ansible.provisioning_path = "/vagrant"
@@ -76,9 +77,14 @@ Vagrant.configure("2") do |config|
     end
   end
 
+  config.vm.provision "file", destination: "/tmp/vimrc.local", source: "files/vimrc.local"
   config.vm.provision "shell", inline: <<-SHELL
     #!/usr/bin/env bash
     set -x
+    # The BELLS!!!
+    grep -q '^set bell-style none' /etc/inputrc || sed -i 's/#\s*set bell-style none/set bell-style none/' /etc/inputrc
+    [ -f /etc/vim/vimrc.local ] || ln -fs /tmp/vimrc.local /etc/vim/vimrc.local
+
     # Enable mDNS on the private_network
     # Enable mDNS globally
     if ! [ -f /etc/systemd/resolved.conf.d/mDNS.conf ]; then

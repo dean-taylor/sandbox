@@ -10,6 +10,11 @@ ANSIBLE_GROUPS = {
 }
 ANSIBLE_HOST_VARS = {}
 
+DEFAULT_VM_CPUS = "2"
+DEFAULT_VM_MEMORY = "2048"
+CONTROLLER_VM_CPUS = "4"
+CONTROLLER_VM_MEMORY = "4096"
+
 IS_WINDOWS = /mingw32/ =~ RUBY_PLATFORM
 
 Vagrant.configure("2") do |config|
@@ -19,8 +24,8 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder ".", "/vagrant"
 
   config.vm.provider "virtualbox" do |vb|
-    vb.cpus = "2"
-    vb.memory = "2048"
+    vb.cpus = DEFAULT_VM_CPUS
+    vb.memory = DEFAULT_VM_MEMORY
   end
 
   (0..2).each do |n|
@@ -37,6 +42,9 @@ Vagrant.configure("2") do |config|
         conf.vm.provision "file", source: "files/vagrant_inventory.py", destination: "/home/vagrant/.ansible/inventory/vagrant_inventory.py"
         conf.vm.provision "file", source: "files/bash_aliases", destination: "/home/vagrant/.bash_aliases"
         conf.vm.provision "file", source: "files/ansible.cfg", destination: "/home/vagrant/.ansible.cfg"
+        # Copy git and ssh client settings from the host
+        conf.vm.provision "file", source: File.join(ENV['HOME'],'.gitconfig'), destination: "/home/vagrant/.gitconfig" if File.exists?(File.join(ENV['HOME'],'.gitconfig'))
+        conf.vm.provision "file", source: File.join(ENV['HOME'],'.ssh'), destination: "/home/vagrant/"                 if File.exists?(File.join(ENV['HOME'],'.ssh/id_rsa'))
         conf.vm.provision "shell", inline: <<-SHELL
           #!/usr/bin/env bash
           REQUIREMENTS_YML='/vagrant/requirements.yml'
@@ -60,6 +68,9 @@ Vagrant.configure("2") do |config|
           ansible.extra_vars = ANSIBLE_EXTRA_VARS
           ansible.groups = ANSIBLE_GROUPS
           ansible.host_vars = ANSIBLE_HOST_VARS
+          ansible.skip_tags = [
+            "docker_swarm"
+          ]
 
           ansible.compatibility_mode = "2.0"
           #ansible.inventory_path = ""		# Do Not Use this option; ref. to vagrant_inventory.py
@@ -73,17 +84,24 @@ Vagrant.configure("2") do |config|
           ansible.pip_install_cmd = "sudo apt-get -y install python3 python3-pip && sudo ln -frs /usr/bin/pip3 /usr/bin/pip"
           ansible.version = "latest"
         end
+
+        conf.vm.provider "virtualbox" do |vb|
+          vb.cpus = CONTROLLER_VM_CPUS
+          vb.memory = CONTROLLER_VM_MEMORY
+        end
       end
     end
   end
 
   config.vm.provision "file", destination: "/tmp/vimrc.local", source: "files/vimrc.local"
+  config.vm.provision "file", source: "vagrant-common", destination: "/tmp/vagrant-common"
   config.vm.provision "shell", inline: <<-SHELL
     #!/usr/bin/env bash
     set -x
+    [ -h /etc/apt/apt.conf.d/20auto-upgrades ] || ln -fs /tmp/vagrant-common/20auto-upgrades /etc/apt/apt.conf.d/20auto-upgrades
     # The BELLS!!!
+    [ -h /etc/vim/vimrc.local ] || ln -fs /tmp/vagrant-common/vimrc.local /etc/vim/vimrc.local
     grep -q '^set bell-style none' /etc/inputrc || sed -i 's/#\s*set bell-style none/set bell-style none/' /etc/inputrc
-    [ -f /etc/vim/vimrc.local ] || ln -fs /tmp/vimrc.local /etc/vim/vimrc.local
 
     # Enable mDNS on the private_network
     # Enable mDNS globally
@@ -128,6 +146,11 @@ EOT
       ansible.groups = ANSIBLE_GROUPS
       ansible.host_vars = ANSIBLE_HOST_VARS
       ansible.playbook = "playbook.yml"
+      ansible.skip_tags = [
+        "ansible",
+        "k8s-admin",
+        "k8s-dev"
+      ]
 
       #ansible.ask_sudo_pass = false
       #ansible.ask_vault_pass = false

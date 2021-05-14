@@ -3,3 +3,4 @@
 Vagrantfile~
 *.log
 /Vagrantfile-*
+/tmp/

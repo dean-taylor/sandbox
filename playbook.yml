@@ -14,10 +14,10 @@
   roles:
     - role: ansible
       tags: ["ansible"]
-    - role: globus-personal
-      tags: ["globus-personal"]
     - role: k8s-admin
       tags: ["k8s-admin"]
+    - role: k8s-dev
+      tags: ["k8s-dev"]
 
 - hosts: microk8s
   become: yes
@@ -29,8 +29,11 @@
           - vagrant
         microk8s_ipv4address: "{{ ansible_enp0s8.ipv4.address }}"
 
-#- hosts: docker-swarm-*
-#  roles:
-#    - role: dockerSwarm
-#      tags: []
-#      vars: {}
+- hosts: docker_swarm
+  become: yes
+  roles:
+    - role: docker
+      tags: ["docker-swarm"]
+      vars:
+        docker_group_members:
+          - vagrant

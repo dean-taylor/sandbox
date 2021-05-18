@@ -4,3 +4,5 @@
 for f in /vagrant/.vagrant/machines/*/virtualbox/private_key; do
   cat "${f}" |/usr/bin/ssh-add -k - &>/dev/null
 done
+
+unalias ls

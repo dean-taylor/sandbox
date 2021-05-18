@@ -55,6 +55,7 @@ Vagrant.configure("2") do |config|
           [ -f /home/vagrant/.ansible/inventory/vagrant_inventory.py ] && chmod +x /home/vagrant/.ansible/inventory/vagrant_inventory.py
           if ! which ansible >/dev/null; then
             apt-get update
+            apt-get -y upgrade
             apt-get -y install python3 python3-pip
             python3 -m pip install ansible
             if [ -f $REQUIREMENTS_YML ]; then
@@ -93,46 +94,31 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  config.vm.provision "file", destination: "/tmp/vimrc.local", source: "files/vimrc.local"
   config.vm.provision "file", source: "vagrant-common", destination: "/tmp/vagrant-common"
   config.vm.provision "shell", inline: <<-SHELL
     #!/usr/bin/env bash
     set -x
-    [ -h /etc/apt/apt.conf.d/20auto-upgrades ] || ln -fs /tmp/vagrant-common/20auto-upgrades /etc/apt/apt.conf.d/20auto-upgrades
+    cp /tmp/vagrant-common/20auto-upgrades /etc/apt/apt.conf.d/20auto-upgrades
     # The BELLS!!!
-    [ -h /etc/vim/vimrc.local ] || ln -fs /tmp/vagrant-common/vimrc.local /etc/vim/vimrc.local
+    cp /tmp/vagrant-common/vimrc.local /etc/vim/vimrc.local
     grep -q '^set bell-style none' /etc/inputrc || sed -i 's/#\s*set bell-style none/set bell-style none/' /etc/inputrc
 
     # Enable mDNS on the private_network
     # Enable mDNS globally
-    if ! [ -f /etc/systemd/resolved.conf.d/mDNS.conf ]; then
+    if ! cmp --silent /tmp/vagrant-common/resolve_mDNS.conf /etc/systemd/resolved.conf.d/mDNS.conf; then
       [ -d /etc/systemd/resolved.conf.d ] || mkdir -p /etc/systemd/resolved.conf.d
-      cat <<'EOT' >/etc/systemd/resolved.conf.d/mDNS.conf
-[Resolve]
-MulticastDNS=true
-EOT
+      cp /tmp/vagrant-common/resolve_mDNS.conf /etc/systemd/resolved.conf.d/mDNS.conf
       systemctl restart systemd-resolved.service
     fi
     # Enable mDNS on the private_network interface
-    if ! [ -f /etc/systemd/network/10-netplan-enp0s8.network.d/mDNS.conf ]; then
+    if ! cmp --silent /tmp/vagrant-common/network_mDNS.conf /etc/systemd/network/10-netplan-enp0s8.network.d/mDNS.conf; then
       [ -d /etc/systemd/network/10-netplan-enp0s8.network.d ] || mkdir -p /etc/systemd/network/10-netplan-enp0s8.network.d
-      cat <<'EOT' >/etc/systemd/network/10-netplan-enp0s8.network.d/mDNS.conf
-[Network]
-MulticastDNS=true
-EOT
+      cp /tmp/vagrant-common/network_mDNS.conf /etc/systemd/network/10-netplan-enp0s8.network.d/mDNS.conf
       systemctl restart systemd-networkd.service
     fi
     # Add the mDNS .local to Domain search path
-    if ! [ -f /etc/netplan/55-vagrant-SHELL.yaml ]; then
-      cat <<'EOT' >/etc/netplan/55-vagrant-SHELL.yaml
----
-network:
-  ethernets:
-    enp0s8:
-      nameservers:
-        search: ["local"]
-  version: 2
-EOT
+    if ! cmp --silent /tmp/vagrant-common/netplan_55-vagrant-SHELL.yaml /etc/netplan/55-vagrant-SHELL.yaml; then
+      cp /tmp/vagrant-common/netplan_55-vagrant-SHELL.yaml /etc/netplan/55-vagrant-SHELL.yaml
       netplan apply && sleep 5
     fi
   SHELL

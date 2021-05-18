@@ -1,0 +1,7 @@
+---
+network:
+  ethernets:
+    enp0s8:
+      nameservers:
+        search: ["local"]
+  version: 2

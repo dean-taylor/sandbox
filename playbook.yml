@@ -16,6 +16,11 @@
       tags: ["ansible"]
     - role: k8s-admin
       tags: ["k8s-admin"]
+    - role: docker
+      tags: ["docker"]
+      vars:
+        docker_group_members:
+          - vagrant
     - role: k8s-dev
       tags: ["k8s-dev"]
 

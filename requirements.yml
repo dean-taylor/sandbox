@@ -19,6 +19,9 @@ roles:
   - name: k8s-admin
     src: https://github.com/dean-taylor/ansible-role-k8s-admin
     version: main
+  - name: k8s-dev
+    src: https://github.com/dean-taylor/ansible-role-k8s-dev.git
+    version: main
   - name: microk8s
     src: https://github.com/dean-taylor/ansible-role-microk8s
     version: main

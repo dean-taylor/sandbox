@@ -6,6 +6,42 @@ This is a development and testing environment utilising the following main compo
 * Vagrant
 * Ansible
 
+## Cheat sheet
+
+From the Sanbox project directory, in the same directory as the `Vagrantfile` file.
+
+```console
+# Start a single VM
+vagrant up
+
+# Stop and cleanup VMs
+vagrant destroy
+
+# Rerun or trigger a provisioning process
+vagrant provision
+
+# Log into the VM
+vagrant ssh
+
+# Verify status of the VMs
+vagrant status
+
+# All the above commands will be run on k8s-0, if you need act on another VM you need to add the machine name.
+vagrant up k8s-1
+vagrant ssh k8s-1
+vagrant destroy k8s-1
+```
+
+## Stuff to know
+
+Ensure that you have the core components installed. This template also expects a number of common work practices.
+
+With Windows machines and the common practice to lock down a Institutional or Corporate provided laptops the host has minimal required alterations.
+Every tool other than the ones listed will be installed and run from the primary VM `k8s-0`.
+
+For every other OS it is assumed that you develop utilising your host and only require this framework for testing.
+This would include the Ansible client, ssh, git, gpg, SOPS, ...
+
 ## Core requirements:
 
 * Platform agnostic
@@ -15,7 +51,7 @@ This is a development and testing environment utilising the following main compo
 * Generic as possible
   All Ansible provisioning can be triggerd via the standard `vagrant provision` command.
 * Minimise setup tasks
-  Although there are amny Vagrant plugins to make things work these have been avoided to reduce dependancies.
+  Although there are many Vagrant plugins to make things work these have been avoided to reduce dependencies.
 
 ## Stuff that makes this work.
 

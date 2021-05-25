@@ -20,6 +20,7 @@ IS_WINDOWS = /mingw32/ =~ RUBY_PLATFORM
 Vagrant.configure("2") do |config|
   # https://docs.vagrantup.com.
   config.vm.box = "ubuntu/focal64"
+  config.vm.provider :virtualbox
   config.vm.network "private_network", type: "dhcp"
   config.vm.synced_folder ".", "/vagrant"
 
@@ -37,6 +38,9 @@ Vagrant.configure("2") do |config|
   (0..2).each do |n|
     config.vm.define "k8s-#{n}", autostart: n==0?true:false, primary: n==0?true:false do |conf|
       conf.vm.hostname = "k8s-#{n}"
+      (0..0).each do |d|
+        conf.vm.disk :disk, name: "k8s-#{n}-#{d}", size: "5GB"
+      end
       if IS_WINDOWS && n==0
         conf.vm.provision "file", source: "vagrant-ansible_local", destination: "/tmp/vagrant-ansible_local"
         conf.vm.provision "file", source: "files/vagrant_inventory.py", destination: "/home/vagrant/.ansible/inventory/vagrant_inventory.py"
@@ -52,6 +56,7 @@ Vagrant.configure("2") do |config|
           set -x
           /usr/bin/python3 /tmp/vagrant-ansible_local/vagrant-ansible-ssh_config_d.py >/etc/ssh/ssh_config.d/vagrant-ansible_local.conf
           su - vagrant -c "/usr/bin/python3 /tmp/vagrant-ansible_local/vagrant-ansible-ssh_config.py"
+          [ -f /home/vagrant/.ssh/id_rsa ] && chmod 0600 /home/vagrant/.ssh/id_rsa
           [ -f /home/vagrant/.ansible/inventory/vagrant_inventory.py ] && chmod +x /home/vagrant/.ansible/inventory/vagrant_inventory.py
           if ! which ansible >/dev/null; then
             apt-get update

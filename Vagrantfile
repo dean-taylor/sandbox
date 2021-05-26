@@ -139,6 +139,7 @@ Vagrant.configure("2") do |config|
       ansible.playbook = "playbook.yml"
       ansible.skip_tags = [
         "ansible",
+        "docker",
         "k8s-admin",
         "k8s-dev"
       ]
@@ -164,9 +165,9 @@ Vagrant.configure("2") do |config|
       #ansible.verbose = false
       #ansible.version = "2.1.6.0"
 
-      ansible.galaxy_command = "ansible-galaxy collection install -r %{role_file} && ansible-galaxy role install -r %{role_file}"	# --roles-path=%{roles_path} --force
-      ansible.galaxy_role_file = "requirements.yml"
-      ansible.galaxy_roles_path = nil
+      #ansible.galaxy_command = "ansible-galaxy collection install -r %{role_file} && ansible-galaxy role install -r %{role_file}"	# --roles-path=%{roles_path} --force
+      #ansible.galaxy_role_file = "requirements.yml"
+      #ansible.galaxy_roles_path = nil
     end
   end
 end

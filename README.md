@@ -2,9 +2,31 @@
 
 This is a development and testing environment utilising the following main components.
 
-* VirtualBox
-* Vagrant
-* Ansible
+* [VirtualBox](https://www.virtualbox.org/wiki/Downloads)
+  * VirtualBox Extension Pack
+* [Vagrant](https://www.vagrantup.com/docs/installation)
+* [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
+
+## Non-Windows hosts prep.
+
+On non-Windows hosts the assumption has been made that you have your own IDEs, editors, languages, etc..., already installed. To accommodate the VMs take a more passive role.
+Once the above components are installed and working there are a small number of operations on your host that are required.
+Firstly, Ansible runs are triggered from your host machine, not the primary VM as with Windows based hosts. This requires that the Ansible collectiosn and roles required for the
+configuration of VMs need to be loaded onto your host.
+
+```console
+ansible-galaxy collection install -r requirements.yml
+ansible-galaxy role install -r requirements.yml
+```
+
+## Windows host prep.
+
+On Windows based host systems many of the tools for development and provisioning have been moved to a primary VM, this introduces a minimalistic approach for the requirements
+on the Windows host to fit a SOE (Standard Operating Environment) Institutional / Corporate preferred model.
+
+On Windows based hosts you will need:
+* `VirtualBox` as your hypervisor
+* `Vagrant` to configure the standardised complex test systems
 
 ## Cheat sheet
 

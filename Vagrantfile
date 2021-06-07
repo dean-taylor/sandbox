@@ -32,6 +32,9 @@ Vagrant.configure("2") do |config|
   (0..2).each do |n|
     config.vm.define "docker-swarm-#{n}", autostart: false do |conf|
       conf.vm.hostname = "docker-swarm-#{n}"
+      (0..0).each do |d|
+        conf.vm.disk :disk, name: "k8s-#{n}-#{d}", size: "5GB"
+      end
     end
   end
 

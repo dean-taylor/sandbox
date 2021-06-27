@@ -5,6 +5,8 @@ collections:
   - community.general
   - community.kubernetes
   #- kubernetes.core
+  - gluster.gluster
+  - openstack.cloud
 
 roles:
   - name: ansible

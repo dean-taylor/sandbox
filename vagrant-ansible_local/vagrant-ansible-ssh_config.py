@@ -46,7 +46,7 @@ def generate_ssh_config(private_keys):
              new_config[_Host] = _private_key
 
     if new_config:
-        with open(ssh_config, 'r+') as f:
+        with open(ssh_config, 'w+') as f:
             content = f.read()
             f.seek(0, 0)
             for _Host in new_config:

@@ -26,7 +26,7 @@ def main(argv):
             _host = a
 
     config = configparser.ConfigParser(allow_no_value=True,delimiters=(' '))
-    with open("/tmp/vagrant-ansible/inventory/vagrant_ansible_local_inventory") as stream:
+    with open("/opt/vagrant-ansible/inventory/vagrant_ansible_local_inventory") as stream:
         config.read_string("[all]\n" + stream.read())
 
     inventory = {

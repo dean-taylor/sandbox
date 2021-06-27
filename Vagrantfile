@@ -10,7 +10,7 @@ ANSIBLE_GROUPS = {
 }
 ANSIBLE_HOST_VARS = {}
 
-DEFAULT_VM_CPUS = "2"
+DEFAULT_VM_CPUS = "4"
 DEFAULT_VM_MEMORY = "2048"
 CONTROLLER_VM_CPUS = "4"
 CONTROLLER_VM_MEMORY = "4096"
@@ -33,7 +33,7 @@ Vagrant.configure("2") do |config|
     config.vm.define "docker-swarm-#{n}", autostart: false do |conf|
       conf.vm.hostname = "docker-swarm-#{n}"
       (0..0).each do |d|
-        conf.vm.disk :disk, name: "k8s-#{n}-#{d}", size: "5GB"
+        conf.vm.disk :disk, name: "docker-swarm-#{n}-#{d}", size: "5GB"
       end
     end
   end
@@ -57,8 +57,10 @@ Vagrant.configure("2") do |config|
           REQUIREMENTS_YML='/vagrant/requirements.yml'
           set -e
           set -x
-          /usr/bin/python3 /tmp/vagrant-ansible_local/vagrant-ansible-ssh_config_d.py >/etc/ssh/ssh_config.d/vagrant-ansible_local.conf
-          su - vagrant -c "/usr/bin/python3 /tmp/vagrant-ansible_local/vagrant-ansible-ssh_config.py"
+          [ -d /tmp/vagrant-ansible ]       && cp -r /tmp/vagrant-ansible /opt
+          [ -d /tmp/vagrant-ansible_local ] && cp -r /tmp/vagrant-ansible_local /opt
+          /usr/bin/python3 /opt/vagrant-ansible_local/vagrant-ansible-ssh_config_d.py >/etc/ssh/ssh_config.d/vagrant-ansible_local.conf
+          su - vagrant -c "/usr/bin/python3 /opt/vagrant-ansible_local/vagrant-ansible-ssh_config.py"
           [ -f /home/vagrant/.ssh/id_rsa ] && chmod 0600 /home/vagrant/.ssh/id_rsa
           [ -f /home/vagrant/.ansible/inventory/vagrant_inventory.py ] && chmod +x /home/vagrant/.ansible/inventory/vagrant_inventory.py
           if ! which ansible >/dev/null; then
@@ -66,10 +68,10 @@ Vagrant.configure("2") do |config|
             apt-get -y upgrade
             apt-get -y install python3 python3-pip
             python3 -m pip install ansible
-            if [ -f $REQUIREMENTS_YML ]; then
-              su - vagrant -c "ansible-galaxy collection install -r $REQUIREMENTS_YML"
-              su - vagrant -c "ansible-galaxy role install -r $REQUIREMENTS_YML"
-            fi
+          fi
+          if [ -f $REQUIREMENTS_YML ]; then
+            su - vagrant -c "ansible-galaxy collection install -r $REQUIREMENTS_YML"
+            su - vagrant -c "ansible-galaxy role install -r $REQUIREMENTS_YML"
           fi
         SHELL
 
@@ -82,7 +84,7 @@ Vagrant.configure("2") do |config|
           ]
 
           ansible.compatibility_mode = "2.0"
-          #ansible.inventory_path = ""		# Do Not Use this option; ref. to vagrant_inventory.py
+          #ansible.inventory_path = ""		# Do Not Use this option; ref. vagrant_inventory.py
           ansible.limit = "all"
           ansible.playbook = "playbook.yml"
           ansible.provisioning_path = "/vagrant"
